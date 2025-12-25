@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkIo - Modern Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            height: 100dvh;
+            overflow: hidden;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        /* Animated background for dark mode */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(37, 211, 102, 0.08), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(37, 211, 102, 0.06), transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02), transparent 60%);
+            animation: pulse 8s ease-in-out infinite;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        body.light-mode::before {
+            opacity: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Light mode gradient background */
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #dfe5ec 100%);
+        }
+
+        body.light-mode::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(37, 211, 102, 0.03), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 165, 255, 0.03), transparent 50%);
+            pointer-events: none;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-height: 100dvh;  /* ADD THIS TOO */
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        body.light-mode .top-header {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 250, 252, 0.95) 100%);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-name {
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .app-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+        }
+
+        .app-logo svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .app-name-chat {
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .app-name-app {
+            color: #e9edef;
+            transition: color 0.4s ease;
+        }
+
+        body.light-mode .app-name-app {
+            color: #1f2937;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-icon {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8696a0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        body.light-mode .header-icon {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #54656f;
+        }
+
+        .header-icon:hover {
+            background: rgba(37, 211, 102, 0.15);
+            border-color: rgba(37, 211, 102, 0.3);
+            color: #25d366;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+        }
+
+        body.light-mode .header-icon:hover {
+            background: rgba(37, 211, 102, 0.1);
+            border-color: rgba(37, 211, 102, 0.2);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
+        }
+
+        .header-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            transition: all 0.3s;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8696a0;
+            cursor: pointer;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 12px;
+        }
+
+        body.light-mode .theme-toggle {
+            background: rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #54656f;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 165, 0, 0.15);
+            border-color: rgba(255, 165, 0, 0.3);
+            color: #ffa500;
+            transform: translateY(-2px) rotate(20deg);
+            box-shadow: 0 4px 12px rgba(255, 165, 0, 0.2);
+        }
+
+        body.light-mode .theme-toggle:hover {
+            background: rgba(255, 165, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(255, 165, 0, 0.15);
+        }
+
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            transition: all 0.3s;
+        }
+
+        .theme-icon {
+            display: block;
+        }
+
+        .theme-icon.hidden {
+            display: none;
+        }
+
+        /* AI Search Input */
+        .ai-input-container {
+            padding: 16px 20px;
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-shrink: 0;
+        }
+
+        body.light-mode .ai-input-container {
+            background: rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .ai-input-wrapper {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light-mode .ai-input-wrapper {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        .ai-input-wrapper:focus-within {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(37, 211, 102, 0.5);
+            box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.1);
+        }
+
+        body.light-mode .ai-input-wrapper:focus-within {
+            background: #ffffff;
+            border-color: rgba(37, 211, 102, 0.4);
+            box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.08), 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .search-icon {
+            width: 20px;
+            height: 20px;
+            fill: #8696a0;
+            flex-shrink: 0;
+            transition: fill 0.3s ease;
+        }
+
+        body.light-mode .search-icon {
+            fill: #6b7280;
+        }
+
+        .ai-input-wrapper:focus-within .search-icon {
+            fill: #25d366;
+        }
+
+        .ai-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #e9edef;
+            font-size: 15px;
+            outline: none;
+            transition: color 0.3s ease;
+        }
+
+        body.light-mode .ai-input {
+            color: #1f2937;
+        }
+
+        .ai-input::placeholder {
+            color: #8696a0;
+            transition: color 0.3s ease;
+        }
+
+        body.light-mode .ai-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #0e1621;
+            transition: background 0.4s ease;
+        }
+
+        body.light-mode .content-frame {
+            background: #f5f7fa;
+        }
+
+        /* AI Floating Buttons */
+        .ai-buttons {
+            position: fixed;
+            bottom: 120px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 1000;
+        }
+
+        .ai-buttons img{
+            height: inherit;
+            width: inherit;
+            border-radius: inherit;
+        }
+
+        .plus-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        body.light-mode .plus-button {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .plus-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        body.light-mode .plus-button:hover {
+            background: #ffffff;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16);
+        }
+
+        .plus-button svg {
+            width: 24px;
+            height: 24px;
+            stroke: #e9edef;
+            stroke-width: 2.5;
+        }
+
+        body.light-mode .plus-button svg {
+            stroke: #1f2937;
+        }
+
+        .ai-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+           
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            position: relative;
+        }
+
+        body.light-mode .ai-icon {
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.3);
+        }
+
+        .ai-icon:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
+        }
+
+        body.light-mode .ai-icon:hover {
+            box-shadow: 0 8px 28px rgba(37, 211, 102, 0.4);
+        }
+
+        .ai-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .ai-icon::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(135deg, #25d366, #00ff88, #20b858);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            background: linear-gradient(180deg, rgba(20, 20, 20, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 12px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+        }
+
+        body.light-mode .bottom-nav {
+            background: linear-gradient(180deg, rgba(250, 250, 252, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: none;
+            color: #8696a0;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        body.light-mode .nav-item {
+            color: #6b7280;
+        }
+
+        .nav-item:hover {
+            color: #e9edef;
+            transform: translateY(-2px);
+        }
+
+        body.light-mode .nav-item:hover {
+            color: #1f2937;
+        }
+
+        .nav-item.active {
+            color: #25d366;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 4px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4);
+        }
+
+        .nav-icon {
+            width: 26px;
+            height: 26px;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item:hover .nav-icon {
+            transform: scale(1.1);
+        }
+
+        .nav-item.active .nav-icon {
+            transform: scale(1.15);
+        }
+
+        .nav-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+            transition: all 0.3s;
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: white;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            padding: 0 6px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(255, 68, 68, 0.4);
+            border: 2px solid #0a0a0a;
+            transition: border-color 0.4s ease;
+        }
+
+        body.light-mode .nav-badge {
+            border-color: #f5f7fa;
+        }
+
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 14px 20px;
+            }
+
+            .app-name {
+                font-size: 22px;
+            }
+
+            .app-logo {
+                width: 32px;
+                height: 32px;
+            }
+
+            .app-logo svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .header-icon svg,
+            .theme-toggle svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .ai-input-container {
+                padding: 12px 16px;
+            }
+
+            .ai-input-wrapper {
+                padding: 12px 16px;
+            }
+
+            .ai-buttons {
+                bottom: 90px;
+                right: 20px;
+                gap: 14px;
+            }
+
+            .plus-button {
+                width: 56px;
+                height: 56px;
+                border-radius: 18px;
+            }
+
+            .ai-icon {
+                width: 52px;
+                height: 52px;
+            }
+
+            .ai-icon svg {
+                width: 26px;
+                height: 26px;
+            }
+
+            .nav-icon {
+                width: 24px;
+                height: 24px;
+            }
+
+            .nav-label {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header -->
+        <div class="top-header">
+            <div class="app-name">
+                <!-- <div class="app-logo">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                </div> -->
+                <span class="app-name-chat">Talk</span><span class="app-name-app">Io</span>
+            </div>
+            <div class="header-icons">
+                <button class="theme-toggle" title="Toggle Theme" id="themeToggle">
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                    <svg class="theme-icon sun-icon hidden" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="5"/>
+                        <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2"/>
+                        <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2"/>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2"/>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2"/>
+                        <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2"/>
+                        <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2"/>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2"/>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </button>
+                <button class="header-icon" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                </button>
+                <button class="header-icon" title="Menu">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="6" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="18" r="2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Search Input -->
+        <div class="ai-input-container">
+            <div class="ai-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input type="text" class="ai-input" placeholder="Ask Chronex or Search...">
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <iframe id="contentFrame" class="content-frame" src="about:blank"></iframe>
+        </div>
+            
+        <!-- AI Floating Buttons -->
+        <div class="ai-buttons">
+            <button class="ai-icon" title="Chat with AI">
+                <!-- <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                </svg> -->
+                <img src="../Assets/ai.png" alt="">
+            </button>
+            
+            <button class="plus-button" title="New Chat" id="newChatBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-item active" data-page="chats">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                    </svg>
+                    <span class="nav-badge">3</span>
+                </span>
+                <span class="nav-label">Chats</span>
+            </button>
+            <button class="nav-item" data-page="updates">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Updates</span>
+            </button>
+            <button class="nav-item" data-page="calls">
+                <span class="nav-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+                    </svg>
+                </span>
+                <span class="nav-label">Calls</span>
+            </button>
+        </div>
+    </div>
+
+    <script src="main.js">
+    </script>
+</body>
+</html>

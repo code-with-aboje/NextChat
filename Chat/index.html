@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chats - NextChat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .chats-list {
+            padding: 0;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            animation: slideIn 0.4s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .chat-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .chat-item:active {
+            background: rgba(255, 255, 255, 0.05);
+            transform: scale(0.98);
+        }
+
+        .chat-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            font-weight: 800;
+            color: #fff;
+            margin-right: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+        }
+
+        .chat-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .chat-name {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-time {
+            font-size: 0.75em;
+            color: #888;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .chat-last-message {
+            font-size: 0.9em;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-last-message.unread {
+            color: #25d366;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .empty-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 24px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            color: #888;
+            font-size: 0.95em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 16px;
+            border: 3px solid rgba(37, 211, 102, 0.2);
+            border-top-color: #25d366;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="chatsList" class="chats-list">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading chats...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABngGinYTPXuOuWiFw1qtLXn9oswxnWDM",
+            authDomain: "talkio-acd79.firebaseapp.com",
+            databaseURL: "https://talkio-acd79-default-rtdb.firebaseio.com",
+            projectId: "talkio-acd79",
+            storageBucket: "talkio-acd79.firebasestorage.app",
+            messagingSenderId: "374288564174",
+            appId: "1:374288564174:web:dd5ade31bd76637a63759f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        const chatsList = document.getElementById('chatsList');
+
+        function getInitials(name) {
+            if (!name) return 'U';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m`;
+            if (hours < 24) return `${hours}h`;
+            if (days < 7) return `${days}d`;
+            
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function renderEmptyState() {
+            chatsList.innerHTML = `
+                <div class="empty-state">
+                    <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <h3>No chats yet</h3>
+                    <p>Add contacts to start chatting</p>
+                </div>
+            `;
+        }
+
+        // FIXED: Proper navigation function for full-page chat (like WhatsApp)
+        function openChat(chatRoomId, contactId) {
+            // Navigate to the correct path
+            if (window.self !== window.top) {
+                window.top.location.href = `../ChatRoom/chat-room.html?chatId=${chatRoomId}&contactId=${contactId}`;
+            } else {
+                window.location.href = `../ChatRoom/chat-room.html?chatId=${chatRoomId}&contactId=${contactId}`;
+            }
+        }
+
+        function renderChats(chats) {
+            if (chats.length === 0) {
+                renderEmptyState();
+                return;
+            }
+
+            chatsList.innerHTML = chats.map((chat, index) => `
+                <div class="chat-item" data-chat-id="${chat.chatRoomId}" data-contact-id="${chat.contactId}" style="animation-delay: ${index * 0.05}s">
+                    <div class="chat-avatar">${getInitials(chat.name)}</div>
+                    <div class="chat-info">
+                        <div class="chat-header">
+                            <div class="chat-name">${chat.name || 'Unknown'}</div>
+                            <div class="chat-time">${formatTime(chat.lastMessageTime)}</div>
+                        </div>
+                        <div class="chat-last-message ${chat.unread ? 'unread' : ''}">
+                            ${chat.lastMessage || 'Tap to start chatting'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // FIXED: Add click handlers with proper full-page navigation
+            document.querySelectorAll('.chat-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const chatRoomId = item.getAttribute('data-chat-id');
+                    const contactId = item.getAttribute('data-contact-id');
+                    
+                    // Use the new openChat function for full-page navigation
+                    openChat(chatRoomId, contactId);
+                });
+            });
+        }
+
+        // Cache functions remain the same
+        const CACHE_KEY = 'nextchat_contacts_cache';
+        const CACHE_TIMESTAMP_KEY = 'nextchat_contacts_timestamp';
+        const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+
+        function saveToCache(chats) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(chats));
+                localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+            } catch (error) {
+                console.error('Error saving to cache:', error);
+            }
+        }
+
+        function getFromCache() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                const timestamp = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+                
+                if (!cached || !timestamp) return null;
+                
+                const age = Date.now() - parseInt(timestamp);
+                if (age > CACHE_EXPIRY) {
+                    localStorage.removeItem(CACHE_KEY);
+                    localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+                    return null;
+                }
+                
+                return JSON.parse(cached);
+            } catch (error) {
+                console.error('Error reading from cache:', error);
+                return null;
+            }
+        }
+
+        function clearCache() {
+            localStorage.removeItem(CACHE_KEY);
+            localStorage.removeItem(CACHE_TIMESTAMP_KEY);
+        }
+
+        async function loadChats(userId) {
+            // Try to load from cache first (INSTANT display like WhatsApp)
+            const cachedChats = getFromCache();
+            if (cachedChats && cachedChats.length > 0) {
+                console.log('Displaying cached chats:', cachedChats.length);
+                renderChats(cachedChats);
+            } else {
+                chatsList.innerHTML = `
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading chats...</p>
+                    </div>
+                `;
+            }
+
+            // Load fresh data from Firebase (background update)
+            const contactsRef = ref(database, `users/${userId}/contacts`);
+            
+            onValue(contactsRef, async (snapshot) => {
+                console.log('Loading fresh contacts...', snapshot.exists());
+                
+                if (!snapshot.exists()) {
+                    console.log('No contacts found');
+                    clearCache();
+                    renderEmptyState();
+                    return;
+                }
+
+                const contacts = snapshot.val();
+                console.log('Contacts data:', contacts);
+                
+                const chatsPromises = Object.entries(contacts).map(async ([contactId, contactData]) => {
+                    const chatRoomId = contactData.chatRoomId;
+                    
+                    let lastMessage = contactData.lastMessage || null;
+                    let lastMessageTime = contactData.lastMessageTime || contactData.addedAt;
+                    
+                    if (!lastMessage && chatRoomId) {
+                        try {
+                            const chatRoomRef = ref(database, `chats/${chatRoomId}`);
+                            const chatSnapshot = await get(chatRoomRef);
+                            if (chatSnapshot.exists()) {
+                                const chatData = chatSnapshot.val();
+                                lastMessage = chatData.lastMessage || null;
+                                lastMessageTime = chatData.lastMessageTime || lastMessageTime;
+                            }
+                        } catch (error) {
+                            console.error('Error fetching chat room:', error);
+                        }
+                    }
+
+                    return {
+                        contactId,
+                        chatRoomId: chatRoomId || 'no-room',
+                        name: contactData.name || 'Unknown',
+                        lastMessage: lastMessage,
+                        lastMessageTime: lastMessageTime,
+                        unread: false
+                    };
+                });
+
+                const allChats = await Promise.all(chatsPromises);
+                console.log('Fresh chats loaded:', allChats.length);
+                
+                // Sort by last message time (most recent first)
+                allChats.sort((a, b) => {
+                    const timeA = new Date(a.lastMessageTime || 0);
+                    const timeB = new Date(b.lastMessageTime || 0);
+                    return timeB - timeA;
+                });
+
+                saveToCache(allChats);
+                renderChats(allChats);
+            }, (error) => {
+                console.error('Error loading contacts:', error);
+                chatsList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Error loading chats</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Auth state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loadChats(user.uid);
+            } else {
+                chatsList.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Please sign in</h3>
+                        <p>You need to be signed in to view chats</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

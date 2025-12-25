@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - NextChat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(20px);
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #e0e0e0;
+        }
+
+        .contact-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .contact-status {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .contact-status.online {
+            color: #25d366;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            animation: messageSlide 0.3s ease;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.06);
+            color: #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-text {
+            margin-bottom: 4px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+        }
+
+        .message-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            font-size: 0.7em;
+            opacity: 0.7;
+        }
+
+        .message.received .message-footer {
+            justify-content: flex-start;
+        }
+
+        .message-time {
+            font-size: 1em;
+        }
+
+        .message-status {
+            display: flex;
+            align-items: center;
+        }
+
+        .check-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .check-icon.delivered {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .check-icon.read {
+            color: #53bdeb;
+        }
+
+        .check-icon.pending {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .date-divider {
+            text-align: center;
+            padding: 8px 0;
+            margin: 8px 0;
+        }
+
+        .date-divider span {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            color: #888;
+            font-weight: 600;
+        }
+
+        .empty-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        .empty-chat svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-chat p {
+            font-size: 0.95em;
+        }
+
+        .input-container {
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            backdrop-filter: blur(20px);
+        }
+
+        .message-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 12px 20px;
+            color: #fff;
+            font-size: 0.95em;
+            resize: none;
+            max-height: 120px;
+            min-height: 44px;
+            transition: all 0.3s ease;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #25d366;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .message-input::placeholder {
+            color: #666;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        .send-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #fff;
+        }
+
+        @media (max-width: 600px) {
+            .message {
+                max-width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-header">
+        <button class="back-btn" id="backBtn">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        <div class="contact-avatar" id="contactAvatar">U</div>
+        <div class="contact-info">
+            <div class="contact-name" id="contactName">Loading...</div>
+            <div class="contact-status" id="contactStatus">Offline</div>
+        </div>
+    </div>
+
+    <div class="messages-container" id="messagesContainer">
+        <div class="empty-chat">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <p>No messages yet. Say hi! 👋</p>
+        </div>
+    </div>
+
+    <div class="input-container">
+        <textarea 
+            class="message-input" 
+            id="messageInput" 
+            placeholder="Type a message..."
+            rows="1"
+        ></textarea>
+        <button class="send-btn" id="sendBtn" disabled>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, push, onValue, get, update, serverTimestamp, set } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABngGinYTPXuOuWiFw1qtLXn9oswxnWDM",
+            authDomain: "talkio-acd79.firebaseapp.com",
+            databaseURL: "https://talkio-acd79-default-rtdb.firebaseio.com",
+            projectId: "talkio-acd79",
+            storageBucket: "talkio-acd79.firebasestorage.app",
+            messagingSenderId: "374288564174",
+            appId: "1:374288564174:web:dd5ade31bd76637a63759f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const contactName = document.getElementById('contactName');
+        const contactAvatar = document.getElementById('contactAvatar');
+        const contactStatus = document.getElementById('contactStatus');
+        const backBtn = document.getElementById('backBtn');
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const chatRoomId = urlParams.get('chatId');
+        const contactId = urlParams.get('contactId');
+
+        let currentUserId = null;
+        let hasMessages = false;
+        let isAtBottom = true;
+
+        // LOCAL STORAGE CACHE KEYS
+        const CACHE_KEY = `nextchat_messages_${chatRoomId}`;
+        const CACHE_TIMESTAMP_KEY = `nextchat_messages_timestamp_${chatRoomId}`;
+        const CONTACT_CACHE_KEY = `nextchat_contact_${contactId}`;
+
+        // Back button navigation
+        backBtn.addEventListener('click', () => {
+            if (window.self !== window.top) {
+                window.top.location.href = '../Home/index.html';
+            } else {
+                window.location.href = '../Home/index.html';
+            }
+        });
+
+        function getInitials(name) {
+            if (!name) return 'U';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+        }
+
+        function shouldShowDateDivider(currentMsg, previousMsg) {
+            if (!previousMsg) return true;
+            
+            const currentDate = new Date(currentMsg.timestamp).toDateString();
+            const previousDate = new Date(previousMsg.timestamp).toDateString();
+            
+            return currentDate !== previousDate;
+        }
+
+        function getStatusIcon(status, read) {
+            if (status === 'pending') {
+                return `<svg class="check-icon pending" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                </svg>`;
+            } else if (status === 'sent') {
+                return `<svg class="check-icon delivered" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>`;
+            } else if (status === 'delivered' || read) {
+                const color = read ? 'read' : 'delivered';
+                return `<svg class="check-icon ${color}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13l4 4L23 7"/>
+                </svg>`;
+            }
+            return '';
+        }
+
+        function scrollToBottom(force = false) {
+            if (force || isAtBottom) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        // Track if user is at bottom
+        messagesContainer.addEventListener('scroll', () => {
+            const threshold = 100;
+            isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < threshold;
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderMessages(messages) {
+            if (!messages || messages.length === 0) {
+                messagesContainer.innerHTML = `
+                    <div class="empty-chat">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <p>No messages yet. Say hi! 👋</p>
+                    </div>
+                `;
+                hasMessages = false;
+                return;
+            }
+
+            hasMessages = true;
+            let html = '';
+            
+            messages.forEach((msg, index) => {
+                const isSent = msg.senderId === currentUserId;
+                const previousMsg = index > 0 ? messages[index - 1] : null;
+
+                if (shouldShowDateDivider(msg, previousMsg)) {
+                    html += `
+                        <div class="date-divider">
+                            <span>${formatDate(msg.timestamp)}</span>
+                        </div>
+                    `;
+                }
+
+                const statusIcon = isSent ? getStatusIcon(msg.status || 'sent', msg.read) : '';
+
+                html += `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <div class="message-text">${escapeHtml(msg.text)}</div>
+                        <div class="message-footer">
+                            <span class="message-time">${formatTime(msg.timestamp)}</span>
+                            ${isSent ? `<span class="message-status">${statusIcon}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            messagesContainer.innerHTML = html;
+            scrollToBottom();
+        }
+
+        // CACHE FUNCTIONS
+        function saveMessagesToCache(messages) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify(messages));
+                localStorage.setItem(CACHE_TIMESTAMP_KEY, Date.now().toString());
+            } catch (error) {
+                console.error('Error saving messages to cache:', error);
+            }
+        }
+
+        function getMessagesFromCache() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (!cached) return null;
+                return JSON.parse(cached);
+            } catch (error) {
+                console.error('Error reading messages from cache:', error);
+                return null;
+            }
+        }
+
+        function saveContactToCache(contactData) {
+            try {
+                localStorage.setItem(CONTACT_CACHE_KEY, JSON.stringify(contactData));
+            } catch (error) {
+                console.error('Error saving contact to cache:', error);
+            }
+        }
+
+        function getContactFromCache() {
+            try {
+                const cached = localStorage.getItem(CONTACT_CACHE_KEY);
+                if (!cached) return null;
+                return JSON.parse(cached);
+            } catch (error) {
+                console.error('Error reading contact from cache:', error);
+                return null;
+            }
+        }
+
+        async function loadContactInfo() {
+            if (!currentUserId || !contactId) return;
+
+            // Load from cache first (instant display)
+            const cachedContact = getContactFromCache();
+            if (cachedContact) {
+                contactName.textContent = cachedContact.name || 'Unknown';
+                contactAvatar.textContent = getInitials(cachedContact.name);
+            }
+
+            // Then load fresh data from Firebase (background update)
+            const contactRef = ref(database, `users/${currentUserId}/contacts/${contactId}`);
+            const snapshot = await get(contactRef);
+            
+            if (snapshot.exists()) {
+                const contactData = snapshot.val();
+                contactName.textContent = contactData.name || 'Unknown';
+                contactAvatar.textContent = getInitials(contactData.name);
+                saveContactToCache(contactData);
+            }
+        }
+
+        function loadMessages() {
+            // Allow loading even without chat room (will show empty state)
+            if (!chatRoomId || chatRoomId === 'no-room') {
+                console.log('No chat room yet - showing empty state');
+                renderMessages([]);
+                return;
+            }
+
+            // STEP 1: Load from cache FIRST (instant display like WhatsApp)
+            const cachedMessages = getMessagesFromCache();
+            if (cachedMessages && cachedMessages.length > 0) {
+                console.log('Displaying cached messages:', cachedMessages.length);
+                renderMessages(cachedMessages);
+            }
+
+            // STEP 2: Listen to Firebase for real-time updates (background)
+            const messagesRef = ref(database, `chats/${chatRoomId}/messages`);
+            
+            onValue(messagesRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    if (!cachedMessages || cachedMessages.length === 0) {
+                        renderMessages([]);
+                    }
+                    return;
+                }
+
+                const messagesData = snapshot.val();
+                const messages = Object.entries(messagesData).map(([id, msg]) => ({
+                    id,
+                    ...msg
+                })).sort((a, b) => a.timestamp - b.timestamp);
+
+                // Save to cache for next time
+                saveMessagesToCache(messages);
+
+                // Update display with fresh data
+                renderMessages(messages);
+
+                // Mark messages as read
+                markMessagesAsRead(messages);
+            });
+        }
+
+        async function markMessagesAsRead(messages) {
+            if (!currentUserId || !chatRoomId) return;
+
+            const unreadMessages = messages.filter(msg => 
+                msg.senderId !== currentUserId && !msg.read
+            );
+
+            for (const msg of unreadMessages) {
+                const messageRef = ref(database, `chats/${chatRoomId}/messages/${msg.id}`);
+                await update(messageRef, { read: true });
+            }
+        }
+
+        // Create chat room if it doesn't exist
+        async function createChatRoomIfNeeded() {
+            if (!currentUserId || !contactId) return null;
+
+            // Check if chat room already exists in Firebase
+            if (chatRoomId && chatRoomId !== 'no-room') {
+                const chatRef = ref(database, `chats/${chatRoomId}`);
+                const snapshot = await get(chatRef);
+                if (snapshot.exists()) {
+                    return chatRoomId;
+                }
+            }
+
+            // Create new chat room
+            const newChatRoomId = `${currentUserId}_${contactId}`;
+            const chatRoomRef = ref(database, `chats/${newChatRoomId}`);
+            
+            await set(chatRoomRef, {
+                participants: [currentUserId, contactId],
+                createdAt: new Date().toISOString(),
+                lastMessage: '',
+                lastMessageTime: new Date().toISOString()
+            });
+
+            // Update both users' contacts with the new chat room ID
+            const contactRef1 = ref(database, `users/${currentUserId}/contacts/${contactId}`);
+            await update(contactRef1, { chatRoomId: newChatRoomId });
+
+            const contactRef2 = ref(database, `users/${contactId}/contacts/${currentUserId}`);
+            await update(contactRef2, { chatRoomId: newChatRoomId });
+
+            console.log('Created new chat room:', newChatRoomId);
+            
+            // Update URL without reloading
+            const newUrl = `${window.location.pathname}?chatId=${newChatRoomId}&contactId=${contactId}`;
+            window.history.replaceState({}, '', newUrl);
+            
+            return newChatRoomId;
+        }
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || !currentUserId || !contactId) return;
+
+            // Disable button to prevent double sending
+            sendBtn.disabled = true;
+
+            try {
+                // Ensure chat room exists
+                let activeChatRoomId = chatRoomId;
+                if (!chatRoomId || chatRoomId === 'no-room') {
+                    activeChatRoomId = await createChatRoomIfNeeded();
+                    if (!activeChatRoomId) {
+                        throw new Error('Failed to create chat room');
+                    }
+                }
+
+                const messagesRef = ref(database, `chats/${activeChatRoomId}/messages`);
+                const newMessageRef = push(messagesRef);
+
+                const timestamp = Date.now();
+                const message = {
+                    text,
+                    senderId: currentUserId,
+                    timestamp: timestamp,
+                    read: false,
+                    status: 'sent'
+                };
+
+                // Send message to Firebase
+                await set(newMessageRef, message);
+
+                const now = new Date().toISOString();
+
+                // Update last message in chat room
+                const chatRoomRef = ref(database, `chats/${activeChatRoomId}`);
+                await update(chatRoomRef, {
+                    lastMessage: text,
+                    lastMessageTime: now,
+                    lastMessageTimestamp: timestamp
+                });
+
+                // Update BOTH users' contacts with last message
+                const participants = [currentUserId, contactId];
+                for (const userId of participants) {
+                    const otherUserId = participants.find(id => id !== userId);
+                    const contactRef = ref(database, `users/${userId}/contacts/${otherUserId}`);
+                    await update(contactRef, {
+                        lastMessage: text,
+                        lastMessageTime: now,
+                        lastMessageTimestamp: timestamp,
+                        chatRoomId: activeChatRoomId
+                    });
+                }
+
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                
+                // Scroll to bottom
+                scrollToBottom(true);
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
+            sendBtn.disabled = !messageInput.value.trim();
+        });
+
+        // Send message on Enter (without Shift)
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!sendBtn.disabled) {
+                    sendMessage();
+                }
+            }
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Auth state
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                loadContactInfo();
+                loadMessages();
+            } else {
+                window.location.href = '../Login/index.html';
+            }
+        });
+
+        // Validate parameters but don't block if no chat room yet
+        if (!contactId) {
+            alert('Invalid contact');
+            window.location.href = '../Home/index.html';
+        }
+    </script>
+</body>
+</html>

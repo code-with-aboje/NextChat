@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Contact - NextChat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            position: relative;
+            overflow-x: hidden;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            z-index: 1;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0.95) 0%, rgba(15, 15, 15, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+            padding: 48px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 16px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-2px);
+        }
+
+        .back-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #e0e0e0;
+        }
+
+        .header-content h1 {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .header-content p {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .search-section {
+            margin-bottom: 32px;
+        }
+
+        .form-label {
+            display: block;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 18px 14px 48px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #25d366;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: #888;
+        }
+
+        .search-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+            margin-top: 16px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: rgba(255, 0, 80, 0.15);
+            border: 1px solid rgba(255, 0, 80, 0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #ff0050;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 16px;
+            display: none;
+            animation: shake 0.4s ease;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .results-section {
+            margin-top: 32px;
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .user-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-origin: center bottom;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: 800;
+            color: #fff;
+            margin-right: 16px;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3);
+        }
+
+        .user-info h2 {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .user-phone {
+            color: #25d366;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .user-bio {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .user-bio-label {
+            color: #888;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .user-bio-text {
+            color: #e0e0e0;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .add-contact-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #25d366 0%, #20b858 100%);
+            border: none;
+            border-radius: 14px;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+        }
+
+        .add-contact-btn.added {
+            background: rgba(37, 211, 102, 0.2);
+            border: 2px solid #25d366;
+            cursor: default;
+        }
+
+        .add-contact-btn.added:hover {
+            transform: none;
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        body.loading-active {
+            overflow: hidden;
+        }
+
+        body.loading-active > *:not(.loading-overlay) {
+            filter: blur(15px);
+            transition: filter 0.5s ease;
+        }
+
+        :root {
+            --lw: 210px;
+            --lh: 210px;
+        }
+
+        .wrapper {
+            transform: scale(0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loader {
+            width: var(--lw);
+            height: var(--lh);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rotor {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(37, 211, 102, 0.9) 0%, rgba(32, 184, 88, 0.7) 100%);
+            box-shadow: 0 0 15px rgba(37, 211, 102, 0.5), 0 0 5px rgba(37, 211, 102, 0.3);
+            z-index: 105;
+            animation: rotor 2s step-start infinite;
+        }
+
+        @keyframes rotor {
+            0%, 100% {
+                width: 115px;
+                height: 5px;
+                top: 0;
+                left: 0;
+                transform: rotateZ(154deg) translate(15px, -20px);
+            }
+            16.6% {
+                width: 115px;
+                height: 5px;
+                top: 0;
+                left: 100%;
+                transform: rotateZ(208deg) translate(85px, -75px);
+            }
+            33.3% {
+                width: 5px;
+                height: 100px;
+                top: 50px;
+                left: 100%;
+                transform: translate(-5px, 5px);
+            }
+            50% {
+                width: 5px;
+                height: 115px;
+                top: 150px;
+                left: 100%;
+                transform: rotateZ(243deg) translate(48px, -38px);
+            }
+            66.6% {
+                width: 5px;
+                height: 115px;
+                top: 150px;
+                left: 0%;
+                transform: rotateZ(116deg) translate(-45px, -35px);
+            }
+            88.3% {
+                width: 5px;
+                height: 100px;
+                top: 50px;
+                left: 0%;
+                transform: translate(0px, 5px);
+            }
+        }
+
+        .loader::before, .loader::after {
+            position: absolute;
+            content: "";
+            display: block;
+            clip-path: polygon(0 75%, 0 25%, 50% 0, 100% 25%, 100% 75%, 50% 100%);
+        }
+
+        .loader::before {
+            width: var(--lh);
+            height: var(--lh);
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.4) 0%, rgba(32, 184, 88, 0.4) 100%);
+            opacity: 0.6;
+            animation: pulseGlow 2s ease-in-out infinite;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                opacity: 0.4;
+                filter: brightness(1);
+            }
+            50% {
+                opacity: 0.7;
+                filter: brightness(1.2);
+            }
+        }
+
+        .loader::after {
+            width: calc(var(--lw) - 10px);
+            height: calc(var(--lh) - 10px);
+            background-color: #0a0a0a;
+        }
+
+        .left, .center, .right {
+            width: 30%;
+            height: 100px;
+            position: relative;
+            background: linear-gradient(180deg, #25d366 0%, #20b858 100%);
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(37, 211, 102, 0.4), 0 0 40px rgba(37, 211, 102, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .left::after, .center::after, .right::after,
+        .left::before, .center::before, .right::before {
+            content: '';
+            display: block;
+            position: relative;
+            z-index: 1000;
+            background: linear-gradient(180deg, #25d366 0%, #20b858 100%);
+            height: 12px;
+        }
+
+        .left::before, .center::before, .right::before {
+            bottom: 11.25%;
+            clip-path: polygon(50% 0, 0 100%, 100% 100%);
+        }
+
+        .center::before {
+            bottom: 1%;
+            background-color: #0a0a0a;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .left::after, .center::after, .right::after {
+            top: 87%;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .center::after {
+            top: 82%;
+        }
+
+        .left {
+            margin-left: 10px;
+            animation: topDown 1.2s 0.3s ease-in-out infinite;
+        }
+
+        .center {
+            margin: 0 5px;
+            height: 70px;
+            bottom: 12px;
+            animation: topDown 1.2s ease-in-out infinite;
+        }
+
+        .right {
+            margin-right: 10px;
+            animation: topDown 1.2s 0.6s ease-in-out infinite;
+        }
+
+        @keyframes topDown {
+            0% {
+                bottom: 40%;
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            20% {
+                opacity: 1;
+            }
+            40% {
+                top: 0%;
+                bottom: 0%;
+            }
+            60% {
+                top: 0%;
+                bottom: 0%;
+            }
+            80% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                top: 40%;
+                opacity: 0;
+            }
+        }
+
+        .dialog {
+            margin-top: 60px;
+            text-align: center;
+            color: #25d366;
+            font-size: 1.5em;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(37, 211, 102, 0.3);
+            animation: fade 1.5s ease-in-out infinite;
+        }
+
+        @keyframes fade {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 32px 24px;
+                border-radius: 24px;
+            }
+
+            .header-content h1 {
+                font-size: 1.5em;
+            }
+
+            .wrapper {
+                transform: scale(0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <button class="back-btn" onclick="history.back()">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div class="header-content">
+                    <h1>Add Contact</h1>
+                    <p>Search by phone number</p>
+                </div>
+            </div>
+
+            <div class="search-section">
+                <label class="form-label" for="phoneNumber">Phone Number</label>
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input 
+                        type="tel" 
+                        id="phoneNumber" 
+                        class="search-input" 
+                        placeholder="Enter 9-digit phone number"
+                        maxlength="9"
+                        pattern="[0-9]{9}"
+                    >
+                </div>
+                <button class="search-btn" id="searchBtn">Search Contact</button>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <div class="user-card" id="userCard">
+                    <div class="user-header">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <div class="user-info">
+                            <h2 id="userName">Loading...</h2>
+                            <div class="user-phone" id="userPhone">+000000000</div>
+                        </div>
+                    </div>
+                    <div class="user-bio">
+                        <div class="user-bio-label">About</div>
+                        <div class="user-bio-text" id="userBio">Hey there! I'm using NextChat</div>
+                    </div>
+                    <button class="add-contact-btn" id="addContactBtn">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add to Contacts
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="wrapper">
+            <div class="loader">
+                <div class="rotor"></div>
+                <div class="left"></div>
+                <div class="center"></div>
+                <div class="right"></div>
+            </div>
+            <div class="dialog">
+                <p>Searching...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, query, orderByChild, equalTo, get, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABngGinYTPXuOuWiFw1qtLXn9oswxnWDM",
+            authDomain: "talkio-acd79.firebaseapp.com",
+            databaseURL: "https://talkio-acd79-default-rtdb.firebaseio.com",
+            projectId: "talkio-acd79",
+            storageBucket: "talkio-acd79.firebasestorage.app",
+            messagingSenderId: "374288564174",
+            appId: "1:374288564174:web:dd5ade31bd76637a63759f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        const phoneInput = document.getElementById('phoneNumber');
+        const searchBtn = document.getElementById('searchBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultsSection = document.getElementById('resultsSection');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const userName = document.getElementById('userName');
+        const userPhone = document.getElementById('userPhone');
+        const userBio = document.getElementById('userBio');
+        const userAvatar = document.getElementById('userAvatar');
+        const addContactBtn = document.getElementById('addContactBtn');
+
+        let foundUser = null;
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => errorMessage.classList.remove('show'), 4000);
+        }
+
+        function validatePhoneNumber(phone) {
+            return /^[0-9]{9}$/.test(phone);
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        searchBtn.addEventListener('click', async () => {
+            const phoneNumber = phoneInput.value.trim();
+
+            if (!validatePhoneNumber(phoneNumber)) {
+                showError('Please enter a valid 9-digit phone number');
+                return;
+            }
+
+            // Show loading animation
+            document.body.classList.add('loading-active');
+            loadingOverlay.classList.add('active');
+            resultsSection.classList.remove('show');
+            searchBtn.disabled = true;
+
+            try {
+                // Query users by appPhoneNumber
+                const usersRef = ref(database, 'users');
+                const phoneQuery = query(usersRef, orderByChild('appPhoneNumber'), equalTo(phoneNumber));
+                const snapshot = await get(phoneQuery);
+
+                // Wait for animation (minimum 2 seconds)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Hide loading
+                document.body.classList.remove('loading-active');
+                loadingOverlay.classList.remove('active');
+                searchBtn.disabled = false;
+
+                if (snapshot.exists()) {
+                    // User found
+                    const userData = Object.values(snapshot.val())[0];
+                    foundUser = userData;
+
+                    // Check if it's the current user
+                    if (auth.currentUser && userData.uid === auth.currentUser.uid) {
+                        showError("You can't add yourself as a contact");
+                        return;
+                    }
+
+                    // Display user info with animation
+                    userName.textContent = userData.name || 'Unknown User';
+                    userPhone.textContent = phoneNumber;
+                    userBio.textContent = userData.bio || "Hey there! I'm using NextChat";
+                    userAvatar.textContent = getInitials(userData.name || 'User');
+
+                    // Reset add button
+                    addContactBtn.classList.remove('added');
+                    addContactBtn.innerHTML = `
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add to Contacts
+                    `;
+
+                    // Show results with animation
+                    resultsSection.classList.add('show');
+                } else {
+                    // User not found
+                    showError('No user found with this phone number');
+                    resultsSection.classList.remove('show');
+                }
+            } catch (error) {
+                document.body.classList.remove('loading-active');
+                loadingOverlay.classList.remove('active');
+                searchBtn.disabled = false;
+                showError('Error searching for user. Please try again.');
+                console.error('Search error:', error);
+            }
+        });
+
+        addContactBtn.addEventListener('click', async () => {
+            if (!foundUser || !auth.currentUser) return;
+
+            if (addContactBtn.classList.contains('added')) return;
+
+            try {
+                addContactBtn.disabled = true;
+
+                // Add contact to current user's contacts list
+                const currentUserRef = ref(database, `users/${auth.currentUser.uid}/contacts/${foundUser.uid}`);
+                await update(currentUserRef, {
+                    name: foundUser.name,
+                    appPhoneNumber: foundUser.appPhoneNumber,
+                    addedAt: new Date().toISOString()
+                });
+
+                // Update button to show added state
+                addContactBtn.classList.add('added');
+                addContactBtn.innerHTML = `
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Added to Contacts
+                `;
+
+                setTimeout(() => {
+                    addContactBtn.disabled = false;
+                }, 1000);
+
+            } catch (error) {
+                showError('Failed to add contact. Please try again.');
+                console.error('Add contact error:', error);
+                addContactBtn.disabled = false;
+            }
+        });
+
+        // Allow Enter key to search
+        phoneInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+
+        // Only allow numbers
+        phoneInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+</html>

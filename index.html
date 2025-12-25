@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #010101;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .logo {
+            height: 300px;
+            width: 300px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            object-fit: cover;
+            opacity: 0;
+            transform: scale(0.8);
+            filter: blur(8px);
+            animation: sciFiIn 1.9s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        @keyframes sciFiIn {
+            to {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .app-name {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 50px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 1.2s ease-out 0.8s forwards;
+        }
+
+        .app-name-gradient {
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 25%, #00d4ff 50%, #7b68ee 75%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 300% 300%;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            25% {
+                background-position: 50% 25%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            75% {
+                background-position: 50% 75%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .startBtn {
+            animation: fadeInUp 1s ease-out 1.2s forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        button {
+            padding: 14px 32px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            outline: none;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 8px;
+            background: black;
+            color: white;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 25%, #00d4ff 50%, #7b68ee 75%, #ff6b9d 100%);
+            background-size: 300% 300%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s ease, height 0.5s ease;
+            z-index: -1;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        button:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        button:hover {
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* Loading Screen Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        body.loading-active {
+            overflow: hidden;
+        }
+
+        body.loading-active > *:not(.loading-overlay) {
+            filter: blur(15px);
+            transition: filter 0.5s ease;
+        }
+
+        /* Loading Animation Styles */
+        :root {
+            --lw: 210px;
+            --lh: 210px;
+        }
+
+        .wrapper {
+            transform: scale(0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loader {
+            width: var(--lw);
+            height: var(--lh);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rotor {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.7) 100%);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 5px rgba(255, 255, 255, 0.4);
+            z-index: 105;
+            animation: rotor 2s step-start infinite;
+        }
+
+        @keyframes rotor {
+            0%, 100% {
+                width: 115px;
+                height: 5px;
+                top: 0;
+                left: 0;
+                transform: rotateZ(154deg) translate(15px, -20px);
+            }
+            16.6% {
+                width: 115px;
+                height: 5px;
+                top: 0;
+                left: 100%;
+                transform: rotateZ(208deg) translate(85px, -75px);
+            }
+            33.3% {
+                width: 5px;
+                height: 100px;
+                top: 50px;
+                left: 100%;
+                transform: translate(-5px, 5px);
+            }
+            50% {
+                width: 5px;
+                height: 115px;
+                top: 150px;
+                left: 100%;
+                transform: rotateZ(243deg) translate(48px, -38px);
+            }
+            66.6% {
+                width: 5px;
+                height: 115px;
+                top: 150px;
+                left: 0%;
+                transform: rotateZ(116deg) translate(-45px, -35px);
+            }
+            88.3% {
+                width: 5px;
+                height: 100px;
+                top: 50px;
+                left: 0%;
+                transform: translate(0px, 5px);
+            }
+        }
+
+        .loader::before, .loader::after {
+            position: absolute;
+            content: "";
+            display: block;
+            clip-path: polygon(0 75%, 0 25%, 50% 0, 100% 25%, 100% 75%, 50% 100%);
+        }
+
+        .loader::before {
+            width: var(--lh);
+            height: var(--lh);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(224, 224, 224, 0.8) 100%);
+            opacity: 0.5;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                opacity: 0.3;
+                filter: brightness(1);
+            }
+            50% {
+                opacity: 0.6;
+                filter: brightness(1.2);
+            }
+        }
+
+        .loader::after {
+            width: calc(var(--lw) - 10px);
+            height: calc(var(--lh) - 10px);
+            background-color: #010101;
+        }
+
+        .left, .center, .right {
+            width: 30%;
+            height: 100px;
+            position: relative;
+            background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(255, 255, 255, 0.15);
+        }
+
+        .left::after, .center::after, .right::after,
+        .left::before, .center::before, .right::before {
+            content: '';
+            display: block;
+            position: relative;
+            z-index: 1000;
+            background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 100%);
+            height: 12px;
+        }
+
+        .left::before, .center::before, .right::before {
+            bottom: 11.25%;
+            clip-path: polygon(50% 0, 0 100%, 100% 100%);
+        }
+
+        .center::before {
+            bottom: 1%;
+            background-color: #010101;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .left::after, .center::after, .right::after {
+            top: 87%;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+
+        .center::after {
+            top: 82%;
+        }
+
+        .left {
+            margin-left: 10px;
+            animation: topDown 1.2s 0.3s ease-in-out infinite;
+        }
+
+        .center {
+            margin: 0 5px;
+            height: 70px;
+            bottom: 12px;
+            animation: topDown 1.2s ease-in-out infinite;
+        }
+
+        .right {
+            margin-right: 10px;
+            animation: topDown 1.2s 0.6s ease-in-out infinite;
+        }
+
+        @keyframes topDown {
+            0% {
+                bottom: 40%;
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            20% {
+                opacity: 1;
+            }
+            40% {
+                top: 0%;
+                bottom: 0%;
+            }
+            60% {
+                top: 0%;
+                bottom: 0%;
+            }
+            80% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                top: 40%;
+                opacity: 0;
+            }
+        }
+
+        .dialog {
+            margin-top: 60px;
+            text-align: center;
+            color: #ffffff;
+            font-size: 1.5em;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            animation: fade 1.5s ease-in-out infinite;
+        }
+
+        @keyframes fade {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                height: 250px;
+                width: 250px;
+                margin-bottom: 25px;
+            }
+
+            .app-name {
+                font-size: 38px;
+                margin-bottom: 40px;
+            }
+
+            button {
+                padding: 12px 28px;
+                font-size: 14px;
+            }
+
+            .wrapper {
+                transform: scale(0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">
+        <img src="/Assets/logo.png" alt="NextChat Logo">
+    </div>
+    
+    <div class="app-name">
+        <span class="app-name-gradient">NextChat</span>
+    </div>
+    
+    <div class="startBtn">
+        <button id="getStartedBtn">Get Started</button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="wrapper">
+            <div class="loader">
+                <div class="rotor"></div>
+                <div class="left"></div>
+                <div class="center"></div>
+                <div class="right"></div>
+            </div>
+            <div class="dialog">
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('getStartedBtn').addEventListener('click', function() {
+            // Add blur to body content
+            document.body.classList.add('loading-active');
+            
+            // Show loading overlay
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.add('active');
+            
+            // Redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = './SignUp/index.html';
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

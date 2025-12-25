@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - NextChat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo-section">
+                <h1 class="logo-text">
+                    <span class="logo-text-talk">Next</span><span class="logo-text-io">Chat</span>
+                </h1>
+                <p class="subtitle">Join millions of users connecting worldwide</p>
+            </div>
+
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorBanner" class="error-banner"></div>
+
+            <form id="signupForm">
+                <div class="form-group">
+                    <label class="form-label" for="name">Full Name</label>
+                    <input type="text" id="name" class="form-input" placeholder="Enter your full name" required>
+                    <span class="error-message" id="nameError">Please enter your name</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+                    <span class="error-message" id="emailError">Please enter a valid email</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Create Password</label>
+                    <input type="password" id="password" class="form-input" placeholder="Minimum 8 characters" required>
+                    <span class="error-message" id="passwordError">Password must be at least 8 characters</span>
+                </div>
+
+                <p class="terms">
+                    By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </p>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-text">Create Account</span>
+                </button>
+            </form>
+
+            <div class="login-link">
+                Already have an account? <a href="../Login/index.html">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="wrapper">
+            <div class="loader">
+                <div class="rotor"></div>
+                <div class="left"></div>
+                <div class="center"></div>
+                <div class="right"></div>
+            </div>
+            <div class="dialog">
+                <p>Creating Account...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="main.js">
+    </script>
+</body>
+</html>
