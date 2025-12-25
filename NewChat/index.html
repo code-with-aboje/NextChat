@@ -306,7 +306,6 @@
             box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
         }
 
-        /* Loading Overlay */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -624,7 +623,6 @@
         </div>
     </div>
 
-    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="wrapper">
             <div class="loader">
@@ -634,7 +632,7 @@
                 <div class="right"></div>
             </div>
             <div class="dialog">
-                <p>Searching...</p>
+                <p id="loadingText">Searching...</p>
             </div>
         </div>
     </div>
@@ -642,7 +640,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getDatabase, ref, query, orderByChild, equalTo, get, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, query, orderByChild, equalTo, get, update, set } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyABngGinYTPXuOuWiFw1qtLXn9oswxnWDM",
@@ -663,6 +661,7 @@
         const errorMessage = document.getElementById('errorMessage');
         const resultsSection = document.getElementById('resultsSection');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingText = document.getElementById('loadingText');
         const userName = document.getElementById('userName');
         const userPhone = document.getElementById('userPhone');
         const userBio = document.getElementById('userBio');
@@ -693,44 +692,37 @@
                 return;
             }
 
-            // Show loading animation
             document.body.classList.add('loading-active');
             loadingOverlay.classList.add('active');
+            loadingText.textContent = 'Searching...';
             resultsSection.classList.remove('show');
             searchBtn.disabled = true;
 
             try {
-                // Query users by appPhoneNumber
                 const usersRef = ref(database, 'users');
                 const phoneQuery = query(usersRef, orderByChild('appPhoneNumber'), equalTo(phoneNumber));
                 const snapshot = await get(phoneQuery);
 
-                // Wait for animation (minimum 2 seconds)
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // Hide loading
                 document.body.classList.remove('loading-active');
                 loadingOverlay.classList.remove('active');
                 searchBtn.disabled = false;
 
                 if (snapshot.exists()) {
-                    // User found
                     const userData = Object.values(snapshot.val())[0];
                     foundUser = userData;
 
-                    // Check if it's the current user
                     if (auth.currentUser && userData.uid === auth.currentUser.uid) {
                         showError("You can't add yourself as a contact");
                         return;
                     }
 
-                    // Display user info with animation
                     userName.textContent = userData.name || 'Unknown User';
                     userPhone.textContent = phoneNumber;
                     userBio.textContent = userData.bio || "Hey there! I'm using NextChat";
                     userAvatar.textContent = getInitials(userData.name || 'User');
 
-                    // Reset add button
                     addContactBtn.classList.remove('added');
                     addContactBtn.innerHTML = `
                         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -739,10 +731,8 @@
                         Add to Contacts
                     `;
 
-                    // Show results with animation
                     resultsSection.classList.add('show');
                 } else {
-                    // User not found
                     showError('No user found with this phone number');
                     resultsSection.classList.remove('show');
                 }
@@ -757,21 +747,61 @@
 
         addContactBtn.addEventListener('click', async () => {
             if (!foundUser || !auth.currentUser) return;
-
             if (addContactBtn.classList.contains('added')) return;
 
             try {
                 addContactBtn.disabled = true;
+                document.body.classList.add('loading-active');
+                loadingOverlay.classList.add('active');
+                loadingText.textContent = 'Adding contact...';
 
-                // Add contact to current user's contacts list
-                const currentUserRef = ref(database, `users/${auth.currentUser.uid}/contacts/${foundUser.uid}`);
-                await update(currentUserRef, {
-                    name: foundUser.name,
-                    appPhoneNumber: foundUser.appPhoneNumber,
-                    addedAt: new Date().toISOString()
+                const currentUserId = auth.currentUser.uid;
+                const contactUserId = foundUser.uid;
+
+                // Create chat room ID (consistent order for both users)
+                const chatRoomId = [currentUserId, contactUserId].sort().join('_');
+
+                // Create the chat room in Firebase
+                const chatRoomRef = ref(database, `chats/${chatRoomId}`);
+                await set(chatRoomRef, {
+                    participants: [currentUserId, contactUserId],
+                    createdAt: new Date().toISOString(),
+                    lastMessage: '',
+                    lastMessageTime: new Date().toISOString(),
+                    lastMessageTimestamp: Date.now()
                 });
 
-                // Update button to show added state
+                // Add contact to CURRENT user's contacts list
+                const currentUserContactRef = ref(database, `users/${currentUserId}/contacts/${contactUserId}`);
+                await set(currentUserContactRef, {
+                    name: foundUser.name,
+                    appPhoneNumber: foundUser.appPhoneNumber,
+                    addedAt: new Date().toISOString(),
+                    chatRoomId: chatRoomId,
+                    lastMessage: '',
+                    lastMessageTime: new Date().toISOString()
+                });
+
+                // Add CURRENT user to the OTHER user's contacts (mutual contact)
+                const currentUserData = await get(ref(database, `users/${currentUserId}`));
+                if (currentUserData.exists()) {
+                    const myData = currentUserData.val();
+                    const otherUserContactRef = ref(database, `users/${contactUserId}/contacts/${currentUserId}`);
+                    await set(otherUserContactRef, {
+                        name: myData.name || 'Unknown',
+                        appPhoneNumber: myData.appPhoneNumber || '',
+                        addedAt: new Date().toISOString(),
+                        chatRoomId: chatRoomId,
+                        lastMessage: '',
+                        lastMessageTime: new Date().toISOString()
+                    });
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                document.body.classList.remove('loading-active');
+                loadingOverlay.classList.remove('active');
+
                 addContactBtn.classList.add('added');
                 addContactBtn.innerHTML = `
                     <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -784,21 +814,23 @@
                     addContactBtn.disabled = false;
                 }, 1000);
 
+                console.log('✅ Contact added successfully with chat room:', chatRoomId);
+
             } catch (error) {
+                document.body.classList.remove('loading-active');
+                loadingOverlay.classList.remove('active');
                 showError('Failed to add contact. Please try again.');
                 console.error('Add contact error:', error);
                 addContactBtn.disabled = false;
             }
         });
 
-        // Allow Enter key to search
         phoneInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 searchBtn.click();
             }
         });
 
-        // Only allow numbers
         phoneInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.replace(/[^0-9]/g, '');
         });
